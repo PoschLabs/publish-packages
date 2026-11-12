@@ -35,7 +35,7 @@ The root action publishes all `.deb` and `.rpm` files found recursively below `p
 
 ```yaml
 - name: Publish packages
-  uses: JohannesPosch/publish-packages-action@v1
+  uses: PoschLabs/publish-packages@v1
   with:
     packages-path: packages
     server-url: https://packages.example.com
@@ -64,7 +64,7 @@ The `upload-deb` action can be used independently when a project only produces D
 
 ```yaml
 - name: Publish DEB packages
-  uses: JohannesPosch/publish-packages-action/upload-deb@v1
+  uses: PoschLabs/publish-packages/upload-deb@v1
   with:
     packages-path: packages
     server-url: https://packages.example.com
@@ -93,7 +93,7 @@ The `upload-rpm` action can be used independently when a project only produces R
 
 ```yaml
 - name: Publish RPM packages
-  uses: JohannesPosch/publish-packages-action/upload-rpm@v1
+  uses: PoschLabs/publish-packages/upload-rpm@v1
   with:
     packages-path: packages
     server-url: https://packages.example.com
@@ -226,7 +226,7 @@ jobs:
           path: packages
 
       - name: Publish packages
-        uses: JohannesPosch/publish-packages-action@v1
+        uses: PoschLabs/publish-packages@v1
         with:
           packages-path: packages
           server-url: https://packages.example.com
@@ -252,7 +252,7 @@ jobs:
 
   publish:
     needs: build
-    uses: JohannesPosch/publish-packages-action/.github/workflows/publish-packages.yml@v1
+    uses: PoschLabs/publish-packages/.github/workflows/publish-packages.yml@v1
     with:
       server-url: https://packages.example.com
     secrets:
@@ -279,13 +279,13 @@ Secrets `server-username` and `server-password` are required.
 Consumers should reference a stable major version:
 
 ```yaml
-uses: JohannesPosch/publish-packages-action@v1
+uses: PoschLabs/publish-packages@v1
 ```
 
 Specific releases can also be pinned:
 
 ```yaml
-uses: JohannesPosch/publish-packages-action@v1.0.0
+uses: PoschLabs/publish-packages@v1.0.0
 ```
 
 For security-sensitive environments, pinning the action to a full commit SHA provides the strongest protection against changes to tags.

@@ -71,7 +71,7 @@ jobs:
           path: ${{ inputs.packages-path }}
 
       - name: Publish RPM packages
-        uses: JohannesPosch/publish-packages-action/upload-rpm@v1
+        uses: PoschLabs/publish-packages/upload-rpm@v1
         with:
           packages-path: ${{ inputs.packages-path }}
           server-url: ${{ inputs.server-url }}

@@ -53,7 +53,7 @@ jobs:
           path: ${{ inputs.packages-path }}
 
       - name: Publish DEB and RPM packages
-        uses: JohannesPosch/publish-packages-action@v1
+        uses: PoschLabs/publish-packages@v1
         with:
           packages-path: ${{ inputs.packages-path }}
           server-url: ${{ inputs.server-url }}

@@ -71,7 +71,7 @@ jobs:
           path: ${{ inputs.packages-path }}
 
       - name: Publish DEB packages
-        uses: JohannesPosch/publish-packages-action/upload-deb@v1
+        uses: PoschLabs/publish-packages/upload-deb@v1
         with:
           packages-path: ${{ inputs.packages-path }}
           server-url: ${{ inputs.server-url }}
