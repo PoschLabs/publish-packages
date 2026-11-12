@@ -1,0 +1,66 @@
+name: Upload DEB packages to a package server
+
+description: Upload DEB packages to a APT hosted repository
+
+inputs:
+  packages-path:
+    description: Path containing DEB packages
+    required: false
+    default: packages
+
+  server-url:
+    description: Base URL of the package server
+    required: true
+
+  server-username:
+    description: Package server username
+    required: true
+
+  server-password:
+    description: Package server password
+    required: true
+
+  repository:
+    description: APT hosted repository name
+    required: false
+    default: apt
+
+runs:
+  using: composite
+
+  steps:
+    - name: Upload DEB packages
+      shell: bash
+      env:
+        PACKAGES_PATH: ${{ inputs.packages-path }}
+        SERVER_URL: ${{ inputs.server-url }}
+        SERVER_USERNAME: ${{ inputs.server-username }}
+        SERVER_PASSWORD: ${{ inputs.server-password }}
+        SERVER_REPOSITORY: ${{ inputs.repository }}
+      run: |
+        set -euo pipefail
+
+        mapfile -d '' deb_files < <(
+          find "$PACKAGES_PATH" -type f -name '*.deb' -print0
+        )
+
+        if ((${#deb_files[@]} == 0)); then
+          echo "No DEB packages found in $PACKAGES_PATH" >&2
+          exit 1
+        fi
+
+        for deb_file in "${deb_files[@]}"; do
+          filename="$(basename "$deb_file")"
+
+          echo "Uploading ${filename} to APT repository '${SERVER_REPOSITORY}'"
+
+          curl \
+            --fail \
+            --show-error \
+            --silent \
+            --retry 3 \
+            --user "${SERVER_USERNAME}:${SERVER_PASSWORD}" \
+            -H "Content-Type: multipart/form-data" \
+            --data-binary "@${deb_file}" \
+            "${SERVER_URL}/repository/${SERVER_REPOSITORY}/"
+        done

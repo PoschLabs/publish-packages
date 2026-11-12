@@ -1,0 +1,80 @@
+name: Publish DEB packages
+
+on:
+  workflow_call:
+    inputs:
+      server-url:
+        description: Base URL of the package server
+        type: string
+        required: true
+      artifact-name:
+        description: >-
+          Name of the workflow artifact containing the packages.
+          If empty, all artifacts of the current run are downloaded.
+        type: string
+        required: false
+        default: ''
+      packages-path:
+        description: Directory the artifacts are downloaded to
+        type: string
+        required: false
+        default: packages
+      repository:
+        description: APT hosted repository
+        type: string
+        required: false
+        default: apt
+    secrets:
+      server-username:
+        description: Package server username
+        required: true
+      server-password:
+        description: Package server password
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on:
+      group: package-publishing
+      labels: [package-uploader]
+    container:
+      image: ubuntu:24.04
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates curl
+      - name: Prepare clean artifact directory
+        shell: bash
+        env:
+          PACKAGES_PATH: ${{ inputs.packages-path }}
+        run: |
+          set -euo pipefail
+          # Only permit a relative directory below the workspace.
+          case "$PACKAGES_PATH" in
+            ""|/*|.|..|../*|*/../*|*/..)
+              echo "Invalid packages-path" >&2
+              exit 1
+              ;;
+          esac
+          rm -rf -- "$PACKAGES_PATH"
+          mkdir -p -- "$PACKAGES_PATH"
+
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name || null }}
+          path: ${{ inputs.packages-path }}
+
+      - name: Publish DEB packages
+        uses: JohannesPosch/publish-packages-action/upload-deb@v1
+        with:
+          packages-path: ${{ inputs.packages-path }}
+          server-url: ${{ inputs.server-url }}
+          server-username: ${{ secrets.server-username }}
+          server-password: ${{ secrets.server-password }}
+          repository: ${{ inputs.repository }}

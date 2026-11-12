@@ -1,0 +1,65 @@
+name: Upload RPM packages to a package server
+
+description: Upload RPM packages to a Yum hosted repository
+
+inputs:
+  packages-path:
+    description: Path containing RPM packages
+    required: false
+    default: packages
+
+  server-url:
+    description: Base URL of the package server
+    required: true
+
+  server-username:
+    description: Package server username
+    required: true
+
+  server-password:
+    description: Package server password
+    required: true
+
+  repository:
+    description: Yum hosted repository name
+    required: false
+    default: yum
+
+runs:
+  using: composite
+
+  steps:
+    - name: Upload RPM packages
+      shell: bash
+      env:
+        PACKAGES_PATH: ${{ inputs.packages-path }}
+        SERVER_URL: ${{ inputs.server-url }}
+        SERVER_USERNAME: ${{ inputs.server-username }}
+        SERVER_PASSWORD: ${{ inputs.server-password }}
+        SERVER_REPOSITORY: ${{ inputs.repository }}
+      run: |
+        set -euo pipefail
+
+        mapfile -d '' rpm_files < <(
+          find "$PACKAGES_PATH" -type f -name '*.rpm' -print0
+        )
+
+        if ((${#rpm_files[@]} == 0)); then
+          echo "No RPM packages found in $PACKAGES_PATH" >&2
+          exit 1
+        fi
+
+        for rpm_file in "${rpm_files[@]}"; do
+          filename="$(basename "$rpm_file")"
+
+          echo "Uploading ${filename} to Yum repository '${SERVER_REPOSITORY}'"
+
+          curl \
+            --fail \
+            --show-error \
+            --silent \
+            --retry 3 \
+            --user "${SERVER_USERNAME}:${SERVER_PASSWORD}" \
+            --upload-file "${rpm_file}" \
+            "${SERVER_URL}/repository/${SERVER_REPOSITORY}/${filename}"
+        done

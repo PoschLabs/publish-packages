@@ -1,0 +1,63 @@
+name: Publish DEB and RPM packages
+
+on:
+  workflow_call:
+    inputs:
+      server-url:
+        description: Base URL of the package server
+        type: string
+        required: true
+      artifact-name:
+        description: >-
+          Name of the workflow artifact containing the packages.
+          If empty, all artifacts of the current run are downloaded.
+        type: string
+        required: false
+        default: ''
+      packages-path:
+        description: Directory the artifacts are downloaded to
+        type: string
+        required: false
+        default: packages
+      apt-repository:
+        description: APT hosted repository
+        type: string
+        required: false
+        default: apt
+      yum-repository:
+        description: Yum hosted repository
+        type: string
+        required: false
+        default: yum
+    secrets:
+      server-username:
+        description: Package server username
+        required: true
+      server-password:
+        description: Package server password
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on:
+      group: package-publishing
+      labels: [package-uploader]
+    steps:
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name || null }}
+          path: ${{ inputs.packages-path }}
+
+      - name: Publish DEB and RPM packages
+        uses: JohannesPosch/publish-packages-action@v1
+        with:
+          packages-path: ${{ inputs.packages-path }}
+          server-url: ${{ inputs.server-url }}
+          server-username: ${{ secrets.server-username }}
+          server-password: ${{ secrets.server-password }}
+          apt-repository: ${{ inputs.apt-repository }}
+          yum-repository: ${{ inputs.yum-repository }}
